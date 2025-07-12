@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="si">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Education Zone - 2026 O/L Countdown</title>
+  <link rel="icon" href="https://i.imgur.com/U1VKSNS.png" type="image/png">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Sinhala&display=swap">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Sinhala&display=swap');
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Noto Sans Sinhala', sans-serif; background: #000; color: #f5f5f5; line-height: 1.6; }
+    #tsparticles { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; }
+    
+    .loading-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; opacity: 1; transition: opacity 0.5s ease; }
+    .loading-screen.hidden { opacity: 0; pointer-events: none; }
+    .loading-message { font-size: 24px; color: #ff0000; margin-top: 20px; }
+    .typing-animation { display: inline-block; border-right: 2px solid #ff0000; white-space: nowrap; overflow: hidden; animation: typing 3s steps(30, end), blink-caret 0.75s step-end infinite; }
+    @keyframes typing { from { width: 0; } to { width: 15ch; } }
+    @keyframes blink-caret { from, to { border-color: transparent; } 50% { border-color: #ff0000; } }
+
+    /* --- Updated Header Styles --- */
+    header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; background-color: rgba(0, 0, 0, 0.7); color: white; border-bottom: 3px solid #ff0000; position: fixed; top: 0; width: 100%; z-index: 100; backdrop-filter: blur(5px); }
+    .logo-container { display: flex; align-items: center; gap: 15px; }
+    .header-logo { height: 50px; }
+    header h1 { font-size: 24px; }
+    .home-button { color: white; text-decoration: none; background: rgba(255, 0, 0, 0.5); padding: 5px 15px; border-radius: 15px; transition: background 0.3s; max-width: max-content; }
+    .home-button:hover { background: #ff0000; }
+
+    footer { background-color: rgba(0, 0, 0, 0.8); color: white; text-align: center; padding: 10px 0; width: 100%; border-top: 2px solid #ff0000; }
+    .container { max-width: 960px; margin: 120px auto 40px; padding: 20px; }
+    .section { margin-bottom: 40px; padding: 20px; border-radius: 8px; background: rgba(10, 10, 10, 0.6); border: 1px solid rgba(255, 0, 0, 0.5); opacity: 0; transform: translateY(40px); transition: opacity 0.6s ease-out, transform 0.6s ease-out; backdrop-filter: blur(3px); }
+    .section.is-visible { opacity: 1; transform: translateY(0); }
+    h2 { color: #ff0000; border-bottom: 1px solid #ff0000; padding-bottom: 5px; margin-bottom: 15px; text-align: center; }
+    
+    #countdown { text-align: center; }
+    .countdown-container { display: flex; justify-content: center; gap: 20px; margin-top: 20px; flex-wrap: wrap; }
+    .countdown-item { background: rgba(255, 0, 0, 0.2); border: 1px solid #ff0000; padding: 15px; border-radius: 10px; min-width: 100px; }
+    .countdown-item span { display: block; }
+    .countdown-item span:first-child { font-size: 3rem; font-weight: bold; }
+    .countdown-item span:last-child { font-size: 1rem; color: #ccc; }
+
+    /* Mobile View Styles */
+    @media (max-width: 768px) {
+      header h1 { font-size: 18px; }
+      .header-logo { height: 40px; }
+    }
+    @media (max-width: 480px) {
+      header h1 { display: none; } /* Hide title on very small screens */
+      .home-button { padding: 4px 10px; font-size: 14px; }
+      .countdown-container { gap: 10px; }
+      .countdown-item { padding: 10px; min-width: 75px; }
+      .countdown-item span:first-child { font-size: 2rem; }
+      .countdown-item span:last-child { font-size: 0.8rem; }
+    }
+
+    .tip-section { text-align: center; }
+    .tip-text { font-size: 1.1rem; font-style: italic; color: #f0f0f0; margin-top: 10px; }
+    .progress-bar-container { width: 100%; background: #333; border-radius: 5px; margin-top: 15px; }
+    .progress-bar { width: 0%; height: 10px; background: linear-gradient(90deg, #ff0000, #ff8a00); border-radius: 5px; animation: loadProgress 5s ease-in-out infinite; }
+    @keyframes loadProgress { from { width: 0%; } to { width: 100%; } }
+
+  </style>
+</head>
+<body>
+
+  <div class="loading-screen" id="loading-screen">
+    <img src="https://i.imgur.com/U1VKSNS.png" alt="Loading Logo" style="height: 100px; margin-bottom: 20px; filter: drop-shadow(0 0 10px #ff0000);">
+    <div class="loading-message">
+      <div class="typing-animation">Loading Exam AI...</div>
+    </div>
+  </div>
+
+  <div id="tsparticles"></div>
+
+  <header>
+    <div class="logo-container">
+        <img src="https://i.imgur.com/U1VKSNS.png" alt="Smart Education Zone Logo" class="header-logo">
+        <h1>Smart Education Zone</h1>
+    </div>
+    <a href="index.html" class="home-button">🏠 Home</a>
+  </header>
+
+  <div class="container">
+    <div class="section" id="welcome">
+      <h2>💞 Welcome Future Champions! 💞</h2>
+      <p style="text-align: center;">ඉතින් ඔයත් ඔයාගේ phone එකේ Games play කරනවද? මේ Game එක උත්සහ වන්තයන්ට විතරයි 😎<br>2026 O/L කරන ඔබට ජය ගන්න හැකියාව දෙන Game එකක්! ❤️</p>
+    </div>
+
+    <div class="section" id="countdown">
+      <h2>O/L 2026 විභාගයට තව...</h2>
+      <div class="countdown-container">
+        <div class="countdown-item"><span id="days">00</span><span>දින</span></div>
+        <div class="countdown-item"><span id="hours">00</span><span>පැය</span></div>
+        <div class="countdown-item"><span id="minutes">00</span><span>මිනිත්තු</span></div>
+        <div class="countdown-item"><span id="seconds">00</span><span>තත්පර</span></div>
+      </div>
+    </div>
+    
+    <div class="section" id="tip">
+        <div class="tip-section">
+            <h2>🔥 O/L Tip!</h2>
+            <p class="tip-text">"මේ වන විට ඔබ 10 වසර පාඩම් කර ඉවර වෙන්න අවශ්‍යයි..."</p>
+            <div class="progress-bar-container">
+                <div class="progress-bar"></div>
+            </div>
+        </div>
+    </div>
+
+  </div>
+
+  <footer>
+    © 2025 Smart Education Zone | Powered by Students for Students 🚀
+  </footer>
+  
+  <script src="https://cdn.jsdelivr.net/npm/tsparticles@2.12.0/tsparticles.bundle.min.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const loadingScreen = document.getElementById('loading-screen');
+      setTimeout(() => {
+        loadingScreen.classList.add('hidden');
+      }, 2500);
+
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) entry.target.classList.add('is-visible');
+        });
+      }, { threshold: 0.1 });
+      document.querySelectorAll('.section').forEach(section => observer.observe(section));
+
+      const countdownTargetDate = new Date("2026-01-10T00:00:00").getTime();
+      const countdownInterval = setInterval(() => {
+        const now = new Date().getTime();
+        const distance = countdownTargetDate - now;
+
+        if (distance < 0) {
+          clearInterval(countdownInterval);
+          document.getElementById('countdown').innerHTML = "<h2>විභාගය අවසන්! සුබ අනාගතයක්!</h2>";
+          return;
+        }
+
+        const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+        
+        const pad = (num) => num < 10 ? '0' + num : num;
+
+        document.getElementById('days').innerText = pad(days);
+        document.getElementById('hours').innerText = pad(hours);
+        document.getElementById('minutes').innerText = pad(minutes);
+        document.getElementById('seconds').innerText = pad(seconds);
+      }, 1000);
+
+      const motivationalMessages = [
+          "අද දවස උපරිමයෙන් ප්‍රයෝජනයට ගන්න. ඔබගේ අනාගතය ඒ මත තීරණය වේවි!", "සෑම කුඩා උත්සාහයක්ම විශාල ජයග්‍රහණයක ආරම්භයයි.", "අපහසුයි කියා අත්හරින්න එපා. ඔබ සිතනවාට වඩා ඔබ ශක්තිමත්.", "අධ්‍යාපනය යනු අනාගතය සඳහා හොඳම ආයෝජනයයි.", "ඔබේ සිහිනය කරා යන ගමනේදී විවේක ගන්න, නමුත් කිසිවිටෙක අත් නොහරින්න.", "දැනුම බලයයි. එය ලබාගැනීමට වෙහෙසෙන්න.", "ජයග්‍රාහකයින් කිසිවිටෙක අත් නොහරියි; අත්හරින්නන් කිසිවිටෙක ජය නොගනී.", "අද දවසේ කැපකිරීම හෙට දවසේ සැනසීමයි.", "ඔබේ ඉලක්කය මත පමණක් අවධානය යොමු කරන්න.", "සෑම දිනකම අලුත් දෙයක් ඉගෙන ගන්න.", "විභාගය යනු ඔබව මැනීමේ අවස්ථාවක් මිස, බිය විය යුතු දෙයක් නොවේ.", "ඔබේ තරඟය ඔබ සමගම පමණි. ඊයේට වඩා අද දක්ෂ වන්න.", "විශ්වාසය ඇතුව වැඩ කරන්න. ඔබට ජයගත හැකියි!", "සැලැස්මක් ඇතුව වැඩ කිරීමෙන් අඩක් නිමවූවා හා සමානයි.", "කාලය කළමනාකරණය ජයග්‍රහණයේ රහසයි."
+      ];
+      for(let i = 1; i <= 160; i++) motivationalMessages.push(`දවස ${i}: ඔබේ ඉලක්කය කුඩා කොටස් වලට කඩා අද දවසේ කොටස අවසන් කරන්න!`);
+
+      const askForNotificationPermission = () => {
+        if ('Notification' in window && localStorage.getItem('notificationPrompted') !== 'true') {
+          setTimeout(() => {
+            Notification.requestPermission().then(() => {
+              localStorage.setItem('notificationPrompted', 'true');
+            });
+          }, 5000);
+        }
+      };
+
+      const sendDailyMotivation = () => {
+        if (Notification.permission === 'granted') {
+          const randomIndex = Math.floor(Math.random() * motivationalMessages.length);
+          new Notification("🔥 Daily O/L Motivation!", {
+            body: motivationalMessages[randomIndex],
+            icon: 'https://i.imgur.com/U1VKSNS.png'
+          });
+        }
+      };
+      
+      askForNotificationPermission();
+      setInterval(sendDailyMotivation, 1000 * 60 * 60 * 24);
+
+      tsParticles.load("tsparticles", {
+        background: { color: { value: "#000000" } }, fpsLimit: 60, interactivity: { events: { onHover: { enable: true, mode: "repulse" }, onClick: { enable: true, mode: "push" }, resize: true }, modes: { push: { quantity: 4 }, repulse: { distance: 150, duration: 0.4 } } }, particles: { color: { value: "#ff0000" }, links: { color: "#ff0000", distance: 150, enable: true, opacity: 0.5, width: 1 }, collisions: { enable: true }, move: { direction: "none", enable: true, outModes: { default: "bounce" }, random: false, speed: 2, straight: false }, number: { density: { enable: true, area: 800 }, value: 80 }, opacity: { value: 0.5 }, shape: { type: "circle" }, size: { value: { min: 1, max: 5 } } }, detectRetina: true
+      });
+    });
+  </script>
+</body>
+</html>

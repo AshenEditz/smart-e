@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="si">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Exam AI - Sinhala Education Assistant</title>
+  <link rel="icon" href="https://i.imgur.com/U1VKSNS.png" type="image/png">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Sinhala&display=swap">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Sinhala&display=swap');
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Noto Sans Sinhala', sans-serif; color: #f5f5f5; background-color: #000; line-height: 1.6; overflow: hidden; }
+    #tsparticles { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; }
+    
+    /* --- New Loading Screen Styles --- */
+    .loading-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; opacity: 1; transition: opacity 0.5s ease; }
+    .loading-screen.hidden { opacity: 0; pointer-events: none; }
+    .loading-message { font-size: 24px; color: #ff0000; margin-top: 20px; }
+    .typing-animation { display: inline-block; border-right: 2px solid #ff0000; white-space: nowrap; overflow: hidden; animation: typing 3s steps(30, end), blink-caret 0.75s step-end infinite; }
+    @keyframes typing { from { width: 0; } to { width: 15ch; } }
+    @keyframes blink-caret { from, to { border-color: transparent; } 50% { border-color: #ff0000; } }
+
+    /* Chat Container */
+    .chat-container { display: flex; flex-direction: column; height: 100vh; max-width: 800px; margin: 0 auto; border-left: 1px solid rgba(255, 0, 0, 0.3); border-right: 1px solid rgba(255, 0, 0, 0.3); background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(5px); }
+    header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; background-color: rgba(0, 0, 0, 0.7); border-bottom: 2px solid #ff0000; flex-shrink: 0; }
+    header h1 { color: #ff0000; font-size: 24px; }
+
+    /* --- New Home Button Style --- */
+    .home-button { color: white; text-decoration: none; background: rgba(255, 0, 0, 0.5); padding: 5px 15px; border-radius: 15px; transition: background 0.3s; }
+    .home-button:hover { background: #ff0000; }
+
+    .chat-history { flex-grow: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
+    .message { max-width: 80%; padding: 10px 15px; border-radius: 15px; line-break: anywhere; }
+    .ai-message { background: #333; align-self: flex-start; border-bottom-left-radius: 0; }
+    .user-message { background: #ff0000; color: white; align-self: flex-end; border-bottom-right-radius: 0; }
+    .chat-input-area { display: flex; gap: 10px; padding: 15px; border-top: 2px solid #ff0000; background-color: rgba(0, 0, 0, 0.7); flex-shrink: 0; }
+    .chat-input-area input { flex-grow: 1; padding: 10px 15px; border: 1px solid #ff0000; border-radius: 20px; background: #1a1a1a; color: white; font-size: 16px; outline: none; }
+    .chat-input-area button { padding: 10px 20px; border: none; background: #ff0000; color: white; border-radius: 20px; cursor: pointer; font-size: 16px; transition: background 0.3s; }
+    .chat-input-area button:hover { background: #cc0000; }
+    /* --- New Regenerate Button Style --- */
+    #regenerate-button { padding: 10px 15px; font-size: 18px; }
+    button:disabled { background: #555; cursor: not-allowed; }
+
+    .typing-indicator { align-self: flex-start; display: none; }
+    .typing-indicator span { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #999; margin: 0 2px; animation: bounce 1.4s infinite ease-in-out both; }
+    .typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
+    .typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
+    @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1.0); } }
+  </style>
+</head>
+<body>
+  
+  <div class="loading-screen" id="loading-screen">
+    <img src="https://i.imgur.com/U1VKSNS.png" alt="Loading Logo" style="height: 100px; margin-bottom: 20px; filter: drop-shadow(0 0 10px #ff0000);">
+    <div class="loading-message">
+      <div class="typing-animation">Loading Exam AI...</div>
+    </div>
+  </div>
+
+  <div id="tsparticles"></div>
+
+  <div class="chat-container">
+    <header>
+      <a href="index.html" class="home-button">🏠 Home</a>
+      <h1>Exam AI</h1>
+      <div style="width: 80px;"></div> </header>
+    
+    <div class="chat-history" id="chat-history"></div>
+    
+    <div class="chat-input-area">
+      <input type="text" id="user-input" placeholder="ඔබගේ ප්‍රශ්නය මෙහි ටයිප් කරන්න...">
+      <button id="regenerate-button" title="Regenerate last response" disabled>🔄</button>
+      <button id="send-button">Send</button>
+    </div>
+  </div>
+  
+  <script src="https://cdn.jsdelivr.net/npm/tsparticles@2.12.0/tsparticles.bundle.min.js"></script>
+  <script>
+    // --- DOM Elements ---
+    const chatHistoryEl = document.getElementById('chat-history');
+    const userInput = document.getElementById('user-input');
+    const sendButton = document.getElementById('send-button');
+    const regenerateButton = document.getElementById('regenerate-button');
+
+    const BACKEND_URL = 'http://localhost:3000/api/chat';
+
+    // Conversation history, including the initial system prompt
+    let conversationHistory = [
+      { role: "user", parts: [{ text: "Your instructions: You are a helpful and friendly AI assistant for Sri Lankan students preparing for O/L and A/L exams. Your name is 'Exam AI'. You must communicate primarily in Sinhala. Your goal is to assist with study questions, explain concepts, provide motivation, and act as an educational partner." }] },
+      { role: "model", parts: [{ text: "හරි, මම Exam AI. ශ්‍රී ලාංකික සිසුන්ගේ විභාග සහායකයා. මම දැන් සූදානම්." }] }
+    ];
+
+    // --- Core Functions ---
+    async function getAIResponse(message, history) {
+      showTypingIndicator(true);
+      sendButton.disabled = true;
+      regenerateButton.disabled = true;
+
+      try {
+        const response = await fetch(BACKEND_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ history: history, message: message }),
+        });
+
+        if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+        
+        const data = await response.json();
+        const aiResponse = data.response;
+
+        addMessageToHistory('ai', aiResponse);
+        conversationHistory.push({ role: "user", parts: [{ text: message }] });
+        conversationHistory.push({ role: "model", parts: [{ text: aiResponse }] });
+        
+      } catch (error) {
+        console.error("Error communicating with backend:", error);
+        addMessageToHistory('ai', 'සමාවන්න, සර්වරය සමග සම්බන්ධ වීමේ දෝෂයක් ඇතිවිය.');
+      } finally {
+        showTypingIndicator(false);
+        sendButton.disabled = false;
+        regenerateButton.disabled = false; // Enable after getting a response
+      }
+    }
+
+    function handleSendMessage() {
+      const userMessage = userInput.value.trim();
+      if (!userMessage) return;
+      addMessageToHistory('user', userMessage);
+      userInput.value = '';
+      getAIResponse(userMessage, conversationHistory);
+    }
+
+    function handleRegenerate() {
+      // Find the last user message to resend
+      const lastUserMessage = conversationHistory.filter(m => m.role === 'user').pop();
+      if (!lastUserMessage) return;
+
+      // Remove the last two items (last user message and last AI response) from history for the API call
+      // The backend will see the conversation *before* the last exchange
+      const historyForRegen = conversationHistory.slice(0, -2);
+      
+      // Remove the last AI response from the UI
+      const messages = chatHistoryEl.querySelectorAll('.message');
+      if (messages.length > 0) {
+        messages[messages.length - 1].remove();
+      }
+
+      // Get a new response for the same user message
+      getAIResponse(lastUserMessage.parts[0].text, historyForRegen);
+    }
+
+    // --- Helper Functions ---
+    function addMessageToHistory(role, text) {
+      const messageDiv = document.createElement('div');
+      messageDiv.className = `message ${role}-message`;
+      messageDiv.innerHTML = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+      chatHistoryEl.appendChild(messageDiv);
+      chatHistoryEl.scrollTop = chatHistoryEl.scrollHeight;
+    }
+
+    function showTypingIndicator(show) {
+      let indicator = document.querySelector('.typing-indicator');
+      if (show) {
+        if (!indicator) {
+          indicator = document.createElement('div');
+          indicator.className = 'typing-indicator';
+          indicator.innerHTML = '<span></span><span></span><span></span>';
+          chatHistoryEl.appendChild(indicator);
+        }
+        indicator.style.display = 'block';
+        chatHistoryEl.scrollTop = chatHistoryEl.scrollHeight;
+      } else {
+        if (indicator) indicator.style.display = 'none';
+      }
+    }
+
+    function showInitialGreeting() {
+      const greeting = "මම Exam Ai, ඔබගේ සිංහල අධ්‍යාපන සහකාර කෘත්‍රිම බුද්ධිය. ඔබගේ විභාගය සඳහා සහය විය හැක්කේ කෙසේද?";
+      addMessageToHistory('ai', greeting);
+    }
+    
+    // --- Event Listeners and Initialization ---
+    sendButton.addEventListener('click', handleSendMessage);
+    regenerateButton.addEventListener('click', handleRegenerate);
+    userInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') handleSendMessage();
+    });
+    // Disable regenerate button when user starts typing a new message
+    userInput.addEventListener('input', () => {
+      regenerateButton.disabled = true;
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // Loading screen logic
+      const loadingScreen = document.getElementById('loading-screen');
+      setTimeout(() => {
+        loadingScreen.classList.add('hidden');
+      }, 2000);
+
+      showInitialGreeting();
+      
+      // tsParticles setup
+      tsParticles.load("tsparticles", {
+        background: { color: { value: "#000000" } }, fpsLimit: 60, interactivity: { events: { onHover: { enable: true, mode: "repulse" }, onClick: { enable: true, mode: "push" }, resize: true }, modes: { push: { quantity: 4 }, repulse: { distance: 150, duration: 0.4 } } }, particles: { color: { value: "#ff0000" }, links: { color: "#ff0000", distance: 150, enable: true, opacity: 0.5, width: 1 }, collisions: { enable: true }, move: { direction: "none", enable: true, outModes: { default: "bounce" }, random: false, speed: 2, straight: false }, number: { density: { enable: true, area: 800 }, value: 80 }, opacity: { value: 0.5 }, shape: { type: "circle" }, size: { value: { min: 1, max: 5 } } }, detectRetina: true
+      });
+    });
+  </script>
+</body>
+</html>
